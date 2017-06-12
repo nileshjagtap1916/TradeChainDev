@@ -28,12 +28,18 @@ func (t *DTC_Chaincode) Init(stub shim.ChaincodeStubInterface, function string, 
 
 func (t *DTC_Chaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 
-	if function == "saveContract" {
+	if function == "initializeUser" {
+		// Initialize the User
+		return initializeUser(stub, args)
+	} else if function == "saveContract" {
 		// Insert Contract data in blockchain
 		return saveContractDetails(stub, args)
 	} else if function == "SaveAttachment" {
 		// inserting attachment data in blockchain
 		return saveAttachmentDetails(stub, args)
+	} else if function == "UpdateContractStatus" {
+		// inserting attachment data in blockchain
+		return UpdateContractStatus(stub, args)
 	}
 
 	return nil, nil
@@ -47,9 +53,15 @@ func (t *DTC_Chaincode) Query(stub shim.ChaincodeStubInterface, function string,
 	} else if function == "getAttachment" {
 		// get attachment details from blockchain
 		return getAttachment(stub, args)
-	}else if function == "getContractDetailsByUserId" {
+	} else if function == "getContractDetailsByUserId" {
 		// get attachment details from blockchain
 		return getContractDetailsByUserId(stub, args)
+	} else if function == "getStaticDetailsByUserId" {
+		// get attachment details from blockchain
+		return getStaticDetailsByUserId(stub, args)
+	} else if function == "getCountStatus" {
+		// return count status of contracts
+		return getCountStatus(stub, args)
 	}
 
 	return nil, nil

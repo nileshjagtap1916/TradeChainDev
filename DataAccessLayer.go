@@ -7,7 +7,7 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
-func createDatabase(stub shim.ChaincodeStubInterface, args []string) (bool,error) {
+func createDatabase(stub shim.ChaincodeStubInterface, args []string) (bool, error) {
 	var err error
 	//Create table "ContractDetails"
 	err = stub.CreateTable("contractDetails", []*shim.ColumnDefinition{
@@ -35,39 +35,21 @@ func createDatabase(stub shim.ChaincodeStubInterface, args []string) (bool,error
 		return false, errors.New("Failed creating userDetails table.")
 	}
 
-	return true,nil
+	return true, nil
 
 }
 
-func initializeUsers (stub shim.ChaincodeStubInterface) (bool, error) {
-		var blankList []string
-		var ok bool
+func insertUserBlankRecord(stub shim.ChaincodeStubInterface, userId string) (bool, error) {
+	var blankList []string
+	var ok bool
 
-		ok = insertUserContractList(stub,"Seller1",blankList)
-		if !ok {
-			return ok, errors.New("Error in creating Seller1")
-		}
-		ok = insertUserContractList(stub,"Buyer1",blankList)
-		if !ok {
-			return ok, errors.New("Error in creating Buyer1")
-		}
-		ok = insertUserContractList(stub,"SellerBank1",blankList)
-		if !ok {
-			return ok, errors.New("Error in creating SellerBank1")
-		}
-		ok = insertUserContractList(stub,"BuyerBank1",blankList)
-		if !ok {
-			return ok, errors.New("Error in creating BuyerBank1")
-		}
-		ok = insertUserContractList(stub,"Transporter1",blankList)
-		if !ok {
-			return ok, errors.New("Error in creating Transporter1")
-		}
-
-		return true, nil
+	ok = insertUserContractList(stub, userId, blankList)
+	if !ok {
+		return ok, errors.New("Error in creating User")
+	}
+	return true, nil
 
 }
-
 
 func insertContractDetails(stub shim.ChaincodeStubInterface, contractDetails contract) (bool, error) {
 	var err error
@@ -184,18 +166,33 @@ func insertUserContractList(stub shim.ChaincodeStubInterface, userId string, con
 	}
 	return true
 }
+
+func updateContractListByContractID(stub shim.ChaincodeStubInterface, contractId string, contractList contract) bool {
+	JsonAsBytes, _ := json.Marshal(contractList)
+
+	ok, err := stub.ReplaceRow("contractDetails", shim.Row{
+		Columns: []*shim.Column{
+			&shim.Column{Value: &shim.Column_String_{String_: contractId}},
+			&shim.Column{Value: &shim.Column_Bytes{Bytes: JsonAsBytes}},
+		},
+	})
+
+	if !ok && err == nil {
+		return false
+	}
+
+	return true
+}
+
 /*func GetUserSpecificContractList(stub shim.ChaincodeStubInterface, UserId string) ([]string, error) {
 	var columns []shim.Column
 	var ContractList []string
-
 	col1 := shim.Column{Value: &shim.Column_String_{String_: UserId}}
 	columns = append(columns, col1)
-
 	row, err := stub.GetRow("UserDetails", columns)
 	if err != nil {
 		return ContractList, errors.New("Failed to query table BuyerDetails")
 	}
-
 	json.Unmarshal(row.Columns[5].GetBytes(), &ContractList)
 	return ContractList, nil
 }*/
@@ -217,7 +214,6 @@ func updateContractDetails(stub shim.ChaincodeStubInterface, contractDetails con
 			&shim.Column{Value: &shim.Column_String_{String_: ContractDetails.DeliveryStatus}},
 		},
 	})
-
 	if !ok && err == nil {
 		return false, errors.New("Error in updating Seller record.")
 	}
